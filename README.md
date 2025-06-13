@@ -1,0 +1,1 @@
+It is a class management attendance management web portal created using html, css , bootstrap, tailwind , javascript and it allows three kinds of users to view the attendance percentage in dashboard students , teachers and admin students can chat with teachers in chat section and solve their doubts regarding attendance and session timings and it is created with a demo data 
