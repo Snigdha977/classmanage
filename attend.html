@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Attendance & Class Management Portal</title>
+<style>
+  /* Reset & base */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+      Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background: #121212;
+    color: #eee;
+    height: 100%;
+    overflow-x: hidden;
+  }
+  a {
+    color: #90caf9;
+    text-decoration: none;
+  }
+  a:hover, a:focus {
+    text-decoration: underline;
+  }
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    background-color: #2962ff;
+    color: white;
+  }
+  button:focus-visible {
+    outline: 3px solid #82b1ff;
+    outline-offset: 2px;
+  }
+  button:hover:not(:disabled) {
+    background-color: #0039cb;
+  }
+  button:disabled {
+    background-color: #555;
+    cursor: default;
+  }
+  input, select, textarea {
+    font-family: inherit;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1.5px solid #444;
+    background: #1e1e1e;
+    color: #eee;
+    transition: border-color 0.3s ease;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #2962ff;
+    background: #292929;
+  }
+  label {
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: block;
+  }
+  /* Scrollbar - dark */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #1e1e1e;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: #555;
+    border-radius: 4px;
+    border: 2px solid #1e1e1e;
+  }
+
+  /* Material Icons */
+  @import url('https://fonts.googleapis.com/css2?family=Material+Icons');
+
+  .material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    vertical-align: middle;
+  }
+
+  /* Layout containers */
+  .app-container {
+    display: grid;
+    grid-template-columns: 70px minmax(0, 1fr);
+    grid-template-rows: 60px 1fr 60px;
+    grid-template-areas:
+      "sidebar header"
+      "sidebar main"
+      "sidebar footer";
+    height: 100vh;
+    color: #eee;
+  }
+  @media (min-width: 1024px) {
+    .app-container {
+      grid-template-columns: 240px minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 767px) {
+    .app-container {
+      grid-template-columns: 1fr;
+      grid-template-rows: 60px 1fr 60px;
+      grid-template-areas:
+        "header"
+        "main"
+        "footer";
+    }
+  }
+
+  header {
+    grid-area: header;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    background: linear-gradient(135deg, #1e40af, #2563eb);
+    color: white;
+    font-weight: 700;
+    font-size: 1.2rem;
+    -webkit-user-select: none;
+    user-select: none;
+    position: sticky;
+    top: 0;
+    z-index: 101;
+  }
+
+  footer {
+    grid-area: footer;
+    background: #1a237e;
+    color: #aaa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9rem;
+  }
+
+  nav.sidebar {
+    grid-area: sidebar;
+    background: #283593;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 0;
+    overflow-y: auto;
+    -webkit-user-select: none;
+    user-select: none;
+
+  }
+  @media (max-width: 767px) {
+    nav.sidebar {
+      display: none;
+    }
+  }
+
+  nav.sidebar .nav-item {
+    width: 100%;
+    padding: 1rem 0;
+    color: #bbb;
+    font-size: 24px;
+    text-align: center;
+    cursor: pointer;
+    border-left: 4px solid transparent;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+  nav.sidebar .nav-item:hover,
+  nav.sidebar .nav-item.active {
+    background-color: #303f9f;
+    color: #fff;
+    border-left-color: #ffc107;
+  }
+  nav.sidebar .nav-label {
+    display: none;
+  }
+  @media (min-width: 1024px) {
+    nav.sidebar {
+      align-items: flex-start;
+      padding-left: 12px;
+    }
+    nav.sidebar .nav-item {
+      text-align: left;
+      padding-left: 16px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    nav.sidebar .nav-label {
+      display: inline;
+    }
+  }
+
+  main {
+    grid-area: main;
+    background: #1c1c1c;
+    padding: 24px;
+    overflow-y: auto;
+  }
+  @media (max-width: 767px) {
+    main {
+      padding: 16px 12px;
+    }
+  }
+
+  /* Role selector dropdown at header */
+  .header-left {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-logo {
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: 1.5px;
+    background: linear-gradient(135deg, #fbc02d, #ffeb3b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .role-select {
+    background: #303f9f;
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    min-width: 140px;
+  }
+  .role-select:focus {
+    outline: 2px solid #ffc107;
+  }
+
+  /* Scrollable content containers with max-width */
+  .content-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* Helpers */
+  .flex-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .btn-small {
+    padding: 6px 14px;
+    font-size: 0.9rem;
+  }
+
+  /* TABLES */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.9rem;
+  }
+  th, td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #333;
+    text-align: left;
+  }
+  th {
+    background: #3949ab;
+  }
+  tr:hover {
+    background: #283593;
+  }
+  tbody tr:nth-child(even) {
+    background: #222;
+  }
+
+  /* Forms */
+  form {
+    margin-top: 20px;
+    max-width: 600px;
+  }
+  fieldset {
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  legend {
+    font-weight: 700;
+    padding: 0 12px;
+  }
+
+  /* Cards */
+  .card {
+    background: #272727;
+    border-radius: 16px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    padding: 24px;
+    margin-bottom: 32px;
+  }
+  .card-header {
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #444;
+    padding-bottom: 8px;
+  }
+
+  /* Buttons */
+  .btn-secondary {
+    background: transparent;
+    color: #90caf9;
+    border: 2px solid #90caf9;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: #90caf9;
+    color: #121212;
+  }
+
+  /* Attendance marks */
+  .attendance-mark {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: inline-block;
+    text-align: center;
+    line-height: 24px;
+    font-weight: 700;
+    color: #121212;
+  }
+  .present {
+    background-color: #4caf50;
+    color: #fff;
+  }
+  .absent {
+    background-color: #f44336;
+    color: #fff;
+  }
+
+  /* Scrollable chat box */
+  .chat-box {
+    height: 360px;
+    background: #222;
+    border-radius: 12px;
+    padding: 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .chat-message {
+    max-width: 70%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    line-height: 1.3;
+  }
+  .chat-message.student {
+    background: #1976d2;
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 0;
+  }
+  .chat-message.teacher {
+    background: #424242;
+    color: #eee;
+    align-self: flex-start;
+    border-bottom-left-radius: 0;
+  }
+  .chat-input-container {
+    display: flex;
+    margin-top: 12px;
+    gap: 12px;
+  }
+  .chat-input {
+    flex: 1;
+    border-radius: 20px;
+    border: none;
+    padding: 10px 16px;
+    font-size: 1rem;
+    background: #1e1e1e;
+    color: #eee;
+  }
+  .chat-input:focus {
+    outline: 2px solid #42a5f5;
+  }
+  .chat-send-btn {
+    min-width: 50px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .chat-send-btn .material-icons {
+    font-size: 28px;
+    color: #42a5f5;
+  }
+  .chat-send-btn:disabled .material-icons {
+    color: #555;
+  }
+
+  /* Attendance dashboard graphs */
+  .progress-bar {
+    background: #333;
+    border-radius: 12px;
+    height: 24px;
+    width: 100%;
+    margin: 12px 0 20px 0;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #42a5f5, #2962ff);
+    width: 0;
+    border-radius: 12px 0 0 12px;
+    transition: width 0.5s ease;
+  }
+  .progress-label {
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  /* Responsive layout overrides */
+  @media (max-width: 767px) {
+    nav.sidebar {
+      display: none;
+    }
+    header {
+      padding: 0 16px;
+      font-size: 1rem;
+    }
+    .header-left {
+      gap: 8px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-container" role="application" aria-label="Attendance Portal Application">
+  <nav class="sidebar" aria-label="Main Navigation">
+    <div class="nav-item sidebar-logo" tabindex="0" aria-label="Attendance Portal">
+      <span class="material-icons" aria-hidden="true">people_alt</span>
+    </div>
+    <!-- Nav items dynamically populated -->
+  </nav>
+  <header>
+    <div class="header-left">
+      <div class="header-logo" aria-label="Application logo">Attend+Manage</div>
+      <label for="roleSelect" class="sr-only">Select user role</label>
+      <select id="roleSelect" class="role-select" aria-live="polite">
+        <option value="admin">Admin</option>
+        <option value="teacher">Teacher</option>
+        <option value="student" selected>Student</option>
+      </select>
+    </div>
+    <div aria-live="polite" class="screen-reader-status" style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;"></div>
+  </header>
+  <main aria-live="polite" tabindex="0">
+    <!-- Content dynamically inserted here -->
+  </main>
+  <footer>&copy; 2025 Attendance Portal</footer>
+</div>
+
+<script>
+  'use strict';
+
+  // Demo data for the portal
+  const demoData = {
+    users: [
+      { id: 1, name: 'Alice Johnson', role: 'admin', email: 'alice@school.edu' },
+      { id: 2, name: 'Mr. Smith', role: 'teacher', email: 'smith@school.edu' },
+      { id: 3, name: 'John Doe', role: 'student', email: 'john@school.edu' },
+      { id: 4, name: 'Jane Roe', role: 'student', email: 'jane@school.edu' },
+      { id: 5, name: 'Emma White', role: 'student', email: 'emma@school.edu' },
+    ],
+    classes: [
+      { id: 1, name: 'Math 101', teacherId: 2 },
+      { id: 2, name: 'Science 101', teacherId: 2 },
+    ],
+    sessions: [
+      // Each session: id, classId, timestamp
+      { id: 1, classId: 1, timestamp: new Date(new Date().setDate(new Date().getDate()-5)).toISOString() },
+      { id: 2, classId: 1, timestamp: new Date(new Date().setDate(new Date().getDate()-3)).toISOString() },
+      { id: 3, classId: 2, timestamp: new Date(new Date().setDate(new Date().getDate()-4)).toISOString() },
+    ],
+    attendance: {
+      // key: sessionId, value: array of {studentId, present:boolean}
+      1: [
+        { studentId: 3, present: true },
+        { studentId: 4, present: false },
+        { studentId: 5, present: true },
+      ],
+      2: [
+        { studentId: 3, present: true },
+        { studentId: 4, present: true },
+        { studentId: 5, present: true },
+      ],
+      3: [
+        { studentId: 3, present: false },
+        { studentId: 4, present: true },
+        { studentId: 5, present: false },
+      ]
+    },
+    messages: [
+      // Example chat messages: id, fromId, toId, text, timestamp
+    ],
+    aiResponses: [
+      "Please check your attendance on the dashboard.",
+      "Sessions are timestamped for accountability.",
+      "Contact your teacher for detailed reports.",
+      "You can message admin for attendance queries here.",
+      "Remember to mark attendance timely as a teacher."
+    ],
+  };
+
+  // Util functions
+  function $(selector, container=document) {
+    return container.querySelector(selector);
+  }
+  function $all(selector, container=document) {
+    return Array.from(container.querySelectorAll(selector));
+  }
+  function formatDate(isoStr) {
+    const d = new Date(isoStr);
+    return d.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'}) + 
+           " " + d.toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'});
+  }
+  function debounce(fn, ms) {
+    let timer;
+    return function (...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn.apply(this, args), ms);
+    };
+  }
+
+  // Current state
+  let currentUserRole = 'student';
+  let currentUserId = 3; // default to John Doe student for demo
+  let currentView = null; // track current nav view
+
+  // Dom references
+  const sidebar = document.querySelector('nav.sidebar');
+  const main = document.querySelector('main');
+  const roleSelect = $('#roleSelect');
+  const screenReaderStatus = document.querySelector('.screen-reader-status');
+
+  // Navigation items per role
+  const navItemsByRole = {
+    admin: [
+      { key: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+      { key: 'users', label: 'Users', icon: 'group' },
+      { key: 'classes', label: 'Classes', icon: 'class' },
+      { key: 'sessions', label: 'Sessions', icon: 'schedule' },
+      { key: 'chat', label: 'Chat', icon: 'chat' },
+    ],
+    teacher: [
+      { key: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+      { key: 'attendance', label: 'Mark Attendance', icon: 'check_circle' },
+      { key: 'reports', label: 'Reports', icon: 'assessment' },
+      { key: 'chat', label: 'Chat', icon: 'chat' },
+    ],
+    student: [
+      { key: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+      { key: 'attendanceHistory', label: 'Attendance History', icon: 'history' },
+      { key: 'chat', label: 'Chat', icon: 'chat' },
+    ],
+  };
+
+  // Update screen-reader with live message
+  function announce(msg) {
+    screenReaderStatus.textContent = '';
+    setTimeout(() => screenReaderStatus.textContent = msg, 100);
+  }
+
+  // Render sidebar nav
+  function renderNav() {
+    sidebar.innerHTML = '<div class="nav-item sidebar-logo" tabindex="0" aria-label="Attendance Portal"><span class="material-icons" aria-hidden="true">people_alt</span></div>';
+    const items = navItemsByRole[currentUserRole] || [];
+    items.forEach((item, i) => {
+      const navItem = document.createElement('div');
+      navItem.className = 'nav-item';
+      navItem.setAttribute('role', 'button');
+      navItem.setAttribute('tabindex', '0');
+      navItem.setAttribute('aria-label', item.label);
+      navItem.dataset.key = item.key;
+      navItem.innerHTML = `<span class="material-icons" aria-hidden="true">${item.icon}</span><span class="nav-label">${item.label}</span>`;
+      if (i === 0) {
+        navItem.classList.add('active');
+        currentView = item.key;
+      }
+      navItem.addEventListener('click', () => switchView(item.key));
+      navItem.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          navItem.click();
+        }
+      });
+      sidebar.appendChild(navItem);
+    });
+  }
+
+  // Switch active nav item and render view
+  function switchView(viewKey) {
+    if (viewKey === currentView) return;
+    currentView = viewKey;
+    $all('.nav-item.active', sidebar).forEach(elem => elem.classList.remove('active'));
+    const selectedNav = [...sidebar.children].find(elem => elem.dataset?.key === viewKey);
+    if (selectedNav) selectedNav.classList.add('active');
+    renderView(viewKey);
+    announce(`View changed to ${selectedNav?.textContent || viewKey}`);
+  }
+
+  // Utilities to generate unique IDs
+  let nextId = 100;
+  function genId() { return ++nextId; }
+
+  // Persist demoData in localStorage mock
+  const STORAGE_KEY = 'attendancePortalData';
+  function loadData() {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        // Validate keys
+        ['users','classes','sessions','attendance','messages'].forEach(k=>{
+          if (!(k in parsed)) throw new Error('Invalid data');
+        });
+        Object.assign(demoData, parsed);
+      } catch {
+        // ignore errors - keep defaults
+      }
+    }
+  }
+  function saveData() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(demoData));
+  }
+
+  // ROLE: Admin - dashboard + user/class/session management
+  function renderAdminDashboard() {
+    main.innerHTML = `
+      <div class="content-container">
+        <h2>Admin Dashboard</h2>
+        <div class="card">
+          <p><strong>Total Users:</strong> ${demoData.users.length}</p>
+          <p><strong>Total Classes:</strong> ${demoData.classes.length}</p>
+          <p><strong>Total Sessions:</strong> ${demoData.sessions.length}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAdminUsers() {
+    const users = demoData.users;
+    let html = `
+    <div class="content-container">
+      <h2>Manage Users</h2>
+      <form id="userForm" aria-label="Add or edit user form">
+        <fieldset>
+          <legend>Add / Edit User</legend>
+          <input type="hidden" id="userId" />
+          <label for="userName">Name</label>
+          <input id="userName" type="text" required aria-required="true" />
+          <label for="userEmail">Email</label>
+          <input id="userEmail" type="email" required aria-required="true" />
+          <label for="userRole">Role</label>
+          <select id="userRole" required aria-required="true">
+            <option value="">Select role</option>
+            <option value="admin">Admin</option>
+            <option value="teacher">Teacher</option>
+            <option value="student">Student</option>
+          </select>
+          <div style="margin-top:10px;">
+            <button type="submit">Save User</button>
+            <button type="button" id="cancelUserEdit" style="margin-left:8px;" class="btn-secondary">Cancel</button>
+          </div>
+        </fieldset>
+      </form>
+      <table aria-label="Users list">
+        <thead>
+          <tr><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          ${users.map(u=>`
+            <tr data-id="${u.id}">
+              <td>${u.name}</td><td>${u.email}</td><td>${u.role}</td>
+              <td>
+                <button aria-label="Edit user ${u.name}" class="edit-user btn-small">Edit</button>
+                <button aria-label="Delete user ${u.name}" class="delete-user btn-small btn-secondary">Delete</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+    main.innerHTML = html;
+
+    // Attach form events
+    const form = $('#userForm');
+    const userIdInput = $('#userId');
+    const userName = $('#userName');
+    const userEmail = $('#userEmail');
+    const userRole = $('#userRole');
+    const cancelBtn = $('#cancelUserEdit');
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const id = userIdInput.value.trim();
+      const name = userName.value.trim();
+      const email = userEmail.value.trim();
+      const role = userRole.value;
+      if (!name || !email || !role) return;
+      if (id) {
+        // Edit existing
+        const uidx = demoData.users.findIndex(u=>u.id===Number(id));
+        if (uidx > -1) {
+          demoData.users[uidx].name = name;
+          demoData.users[uidx].email = email;
+          demoData.users[uidx].role = role;
+        }
+      } else {
+        // Add new
+        const newId = genId();
+        demoData.users.push({id: newId, name, email, role});
+      }
+      saveData();
+      renderAdminUsers();
+      announce(`User ${name} saved`);
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      userIdInput.value = '';
+      userName.value = '';
+      userEmail.value = '';
+      userRole.value = '';
+    });
+
+    // Edit and delete buttons
+    $all('.edit-user').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tr = btn.closest('tr');
+        const uid = Number(tr.dataset.id);
+        const user = demoData.users.find(u=>u.id === uid);
+        if (user) {
+          userIdInput.value = user.id;
+          userName.value = user.name;
+          userEmail.value = user.email;
+          userRole.value = user.role;
+          userName.focus();
+          announce(`Editing user ${user.name}`);
+        }
+      });
+    });
+
+    $all('.delete-user').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tr = btn.closest('tr');
+        const uid = Number(tr.dataset.id);
+        const user = demoData.users.find(u=>u.id === uid);
+        if (user && confirm(`Delete user ${user.name}?`)) {
+          demoData.users = demoData.users.filter(u => u.id !== uid);
+          saveData();
+          renderAdminUsers();
+          announce(`Deleted user ${user.name}`);
+        }
+      });
+    });
+  }
+
+  function renderAdminClasses() {
+    const classes = demoData.classes;
+    const teachers = demoData.users.filter(u => u.role === 'teacher');
+    let html = `
+    <div class="content-container">
+      <h2>Manage Classes</h2>
+      <form id="classForm" aria-label="Add or edit class form">
+        <fieldset>
+          <legend>Add / Edit Class</legend>
+          <input type="hidden" id="classId" />
+          <label for="className">Class Name</label>
+          <input id="className" type="text" required aria-required="true" />
+          <label for="classTeacher">Teacher</label>
+          <select id="classTeacher" required aria-required="true">
+            <option value="">Select Teacher</option>
+            ${teachers.map(t=>`<option value="${t.id}">${t.name}</option>`).join('')}
+          </select>
+          <div style="margin-top:10px;">
+            <button type="submit">Save Class</button>
+            <button type="button" id="cancelClassEdit" style="margin-left:8px;" class="btn-secondary">Cancel</button>
+          </div>
+        </fieldset>
+      </form>
+      <table aria-label="Classes list">
+        <thead>
+          <tr><th>Name</th><th>Teacher</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          ${classes.map(c => {
+            const teacher = teachers.find(t=>t.id===c.teacherId);
+            return `<tr data-id="${c.id}"><td>${c.name}</td><td>${teacher ? teacher.name : 'Unassigned'}</td><td>
+              <button aria-label="Edit class ${c.name}" class="edit-class btn-small">Edit</button>
+              <button aria-label="Delete class ${c.name}" class="delete-class btn-small btn-secondary">Delete</button>
+            </td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+    main.innerHTML = html;
+
+    const form = $('#classForm');
+    const classIdInput = $('#classId');
+    const classNameInput = $('#className');
+    const classTeacherSelect = $('#classTeacher');
+    const cancelBtn = $('#cancelClassEdit');
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const id = classIdInput.value.trim();
+      const name = classNameInput.value.trim();
+      const teacherId = Number(classTeacherSelect.value);
+      if (!name || !teacherId) return;
+      if (id) {
+        const cidx = demoData.classes.findIndex(c=>c.id === Number(id));
+        if (cidx > -1) {
+          demoData.classes[cidx].name = name;
+          demoData.classes[cidx].teacherId = teacherId;
+        }
+      } else {
+        const newId = genId();
+        demoData.classes.push({id: newId, name, teacherId});
+      }
+      saveData();
+      renderAdminClasses();
+      announce(`Class ${name} saved`);
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      classIdInput.value = '';
+      classNameInput.value = '';
+      classTeacherSelect.value = '';
+    });
+
+    // Edit/Delete buttons
+    $all('.edit-class').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tr = btn.closest('tr');
+        const cid = Number(tr.dataset.id);
+        const clazz = demoData.classes.find(c=>c.id === cid);
+        if (clazz) {
+          classIdInput.value = clazz.id;
+          classNameInput.value = clazz.name;
+          classTeacherSelect.value = clazz.teacherId;
+          classNameInput.focus();
+          announce(`Editing class ${clazz.name}`);
+        }
+      });
+    });
+    $all('.delete-class').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tr = btn.closest('tr');
+        const cid = Number(tr.dataset.id);
+        const clazz = demoData.classes.find(c=>c.id === cid);
+        if (clazz && confirm(`Delete class ${clazz.name}? Sessions for this class will also be deleted.`)) {
+          demoData.classes = demoData.classes.filter(c => c.id !== cid);
+          // Remove sessions related to class
+          demoData.sessions = demoData.sessions.filter(s => s.classId !== cid);
+          // Clean attendance for those sessions
+          Object.keys(demoData.attendance).forEach(key => {
+            const sId = Number(key);
+            if (!demoData.sessions.some(s => s.id === sId)) {
+              delete demoData.attendance[key];
+            }
+          });
+          saveData();
+          renderAdminClasses();
+          announce(`Deleted class ${clazz.name} and related sessions`);
+        }
+      });
+    });
+  }
+
+  function renderAdminSessions() {
+    // Manage sessions with classes
+    const sessions = demoData.sessions;
+    const classes = demoData.classes;
+
+    let html = `
+    <div class="content-container">
+      <h2>Manage Sessions</h2>
+      <form id="sessionForm" aria-label="Add or edit session form">
+        <fieldset>
+          <legend>Add / Edit Session</legend>
+          <input type="hidden" id="sessionId" />
+          <label for="sessionClass">Class</label>
+          <select id="sessionClass" required aria-required="true">
+            <option value="">Select Class</option>
+            ${classes.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}
+          </select>
+          <label for="sessionDateTime">Date & Time</label>
+          <input id="sessionDateTime" type="datetime-local" required aria-required="true" />
+          <div style="margin-top:10px;">
+            <button type="submit">Save Session</button>
+            <button type="button" id="cancelSessionEdit" style="margin-left:8px;" class="btn-secondary">Cancel</button>
+          </div>
+        </fieldset>
+      </form>
+      <table aria-label="Sessions list">
+        <thead>
+          <tr><th>Class</th><th>Date & Time</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          ${sessions.map(s => {
+            const clazz = classes.find(c=>c.id === s.classId);
+            return `<tr data-id="${s.id}">
+              <td>${clazz ? clazz.name : 'Unknown'}</td>
+              <td>${formatDate(s.timestamp)}</td>
+              <td>
+                <button aria-label="Edit session for ${clazz ? clazz.name : 'Unknown'}" class="edit-session btn-small">Edit</button>
+                <button aria-label="Delete session for ${clazz ? clazz.name : 'Unknown'}" class="delete-session btn-small btn-secondary">Delete</button>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+    main.innerHTML = html;
+
+    const form = $('#sessionForm');
+    const sessionIdInput = $('#sessionId');
+    const sessionClassSelect = $('#sessionClass');
+    const sessionDateTimeInput = $('#sessionDateTime');
+    const cancelBtn = $('#cancelSessionEdit');
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const id = sessionIdInput.value.trim();
+      const classId = Number(sessionClassSelect.value);
+      const dateTime = sessionDateTimeInput.value;
+      if (!classId || !dateTime) return;
+      // Convert datetime-local to ISO string
+      const isoStr = new Date(dateTime).toISOString();
+      if (id) {
+        const sidx = demoData.sessions.findIndex(s=>s.id === Number(id));
+        if (sidx > -1) {
+          demoData.sessions[sidx].classId = classId;
+          demoData.sessions[sidx].timestamp = isoStr;
+        }
+      } else {
+        const newId = genId();
+        demoData.sessions.push({id: newId, classId, timestamp: isoStr});
+      }
+      saveData();
+      renderAdminSessions();
+      announce(`Session saved for ${classes.find(c=>c.id === classId)?.name || 'class'}`);
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      sessionIdInput.value = '';
+      sessionClassSelect.value = '';
+      sessionDateTimeInput.value = '';
+    });
+
+    $all('.edit-session').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tr = btn.closest('tr');
+        const sid = Number(tr.dataset.id);
+        const sess = demoData.sessions.find(s=>s.id === sid);
+        if (sess) {
+          sessionIdInput.value = sess.id;
+          sessionClassSelect.value = sess.classId;
+          // Convert ISO to local datetime string for input
+          const dt = new Date(sess.timestamp);
+          const localDT = dt.toISOString().slice(0,16);
+          sessionDateTimeInput.value = localDT;
+          sessionDateTimeInput.focus();
+          announce(`Editing session for class ID ${sess.classId}`);
+        }
+      });
+    });
+    $all('.delete-session').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tr = btn.closest('tr');
+        const sid = Number(tr.dataset.id);
+        if (confirm('Delete this session?')) {
+          demoData.sessions = demoData.sessions.filter(s => s.id !== sid);
+          delete demoData.attendance[sid];
+          saveData();
+          renderAdminSessions();
+          announce('Session deleted');
+        }
+      });
+    });
+  }
+
+  // ROLE: Teacher - mark attendance and reports
+  function renderTeacherDashboard() {
+    const teacher = demoData.users.find(u => u.id === currentUserId);
+    const classes = demoData.classes.filter(c => c.teacherId === currentUserId);
+    // Calculate attendance percentage per class
+    let html = `
+      <div class="content-container">
+      <h2>Teacher Dashboard</h2>
+      ${classes.length === 0 ? '<p>You are currently not assigned to any classes.</p>' : ''}
+      <div>`;
+    classes.forEach(clazz => {
+      const classSessions = demoData.sessions.filter(s => s.classId === clazz.id);
+      // For all sessions of this class calculate average attendance
+      // attendance data keys session.id
+      let totalStudents = 0;
+      let totalPresent = 0;
+      classSessions.forEach(session => {
+        const attendanceList = demoData.attendance[session.id] || [];
+        totalStudents = Math.max(totalStudents, attendanceList.length);
+        attendanceList.forEach(att => {
+          if (att.present) totalPresent++;
+        });
+      });
+      const percentage = totalStudents > 0 ? Math.round((totalPresent / (totalStudents * classSessions.length)) * 100) : 0;
+      html += `
+        <div class="card">
+          <div class="card-header">${clazz.name}</div>
+          <p>Sessions: ${classSessions.length}</p>
+          <p>Attendance Percentage: ${percentage}%</p>
+          <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percentage}" aria-label="Attendance percentage progress bar">
+            <div class="progress-bar-fill" style="width:${percentage}%;"></div>
+          </div>
+          <button data-classid="${clazz.id}" class="btn-mark-attendance">Mark Attendance</button>
+          <button data-classid="${clazz.id}" class="btn-view-reports btn-secondary">View Reports</button>
+        </div>`;
+    });
+    html += `</div></div>`;
+    main.innerHTML = html;
+
+    // Attach event listeners
+    $all('.btn-mark-attendance').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const classId = Number(btn.dataset.classid);
+        renderTeacherMarkAttendance(classId);
+      });
+    });
+    $all('.btn-view-reports').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const classId = Number(btn.dataset.classid);
+        renderTeacherReports(classId);
+      });
+    });
+  }
+
+  // Teacher: Mark attendance for a class and session (add new session or select existing)
+  function renderTeacherMarkAttendance(classId) {
+    const clazz = demoData.classes.find(c => c.id === classId);
+    if (!clazz) {
+      main.innerHTML = '<p>Class not found</p>';
+      return;
+    }
+    // Filter sessions for this class
+    const sessions = demoData.sessions.filter(s => s.classId === clazz.id).sort((a,b)=>new Date(b.timestamp) - new Date(a.timestamp));
+
+    let html = `<div class="content-container">
+      <h2>Mark Attendance for ${clazz.name}</h2>
+      <form id="sessionSelectForm" aria-label="Select session form">
+        <label for="sessionSelect">Select Existing Session</label>
+        <select id="sessionSelect" aria-required="true" aria-label="Select a date-time session or new session option">
+          <option value="">-- New Session (Now) --</option>
+          ${sessions.map(s=>`<option value="${s.id}">
+            ${formatDate(s.timestamp)}
+          </option>`).join('')}
+        </select>
+        <button type="submit" style="margin-top: 12px;">Load Attendance</button>
+        <button type="button" id="cancelAttendanceMark" class="btn-secondary" style="margin-left: 12px;">Back</button>
+      </form>
+      <div id="attendanceMarkArea" style="margin-top: 24px;"></div>
+    </div>`;
+
+    main.innerHTML = html;
+    const form = $('#sessionSelectForm');
+    const cancelBtn = $('#cancelAttendanceMark');
+    const attendanceMarkArea = $('#attendanceMarkArea');
+
+    function renderAttendanceForm(session) {
+      // Student list
+      const students = demoData.users.filter(u => u.role === 'student');
+      // Build attendance checkboxes for those students
+      const sessionAttendance = demoData.attendance[session.id] || [];
+      // Map studentId => attendance present/absent
+      const attendMap = new Map(sessionAttendance.map(a => [a.studentId, a.present]));
+      let attHtml = `<form id="attendanceForm" aria-label="Attendance marking form for session">
+        <fieldset>
+          <legend>Attendance for session on ${formatDate(session.timestamp)}</legend>
+          <table>
+            <thead><tr><th>Student</th><th>Present</th></tr></thead>
+            <tbody>`;
+      students.forEach(s => {
+        const present = attendMap.has(s.id) ? attendMap.get(s.id) : false;
+        attHtml += `<tr>
+          <td>${s.name}</td>
+          <td>
+            <input type="checkbox" id="att_${s.id}" name="attendance" value="${s.id}" ${present ? 'checked' : ''} aria-label="Mark ${s.name} as present"/>
+          </td>
+        </tr>`;
+      });
+      attHtml += `</tbody></table>
+        <div style="margin-top: 16px;">
+          <button type="submit">Save Attendance</button>
+        </div>
+      </fieldset>
+      </form>`;
+      attendanceMarkArea.innerHTML = attHtml;
+
+      const attendanceForm = $('#attendanceForm');
+      attendanceForm.addEventListener('submit', e => {
+        e.preventDefault();
+        const formData = new FormData(attendanceForm);
+        const checkedIds = formData.getAll('attendance').map(id => Number(id));
+        // Save attendance for session
+        demoData.attendance[session.id] = students.map(s => {
+          return { studentId: s.id, present: checkedIds.includes(s.id) };
+        });
+        saveData();
+        announce('Attendance saved');
+        renderTeacherDashboard();
+      });
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const select = $('#sessionSelect');
+      if (!select.value) {
+        // New session
+        // Create new session with now timestamp
+        const newSessionId = genId();
+        const nowISO = new Date().toISOString();
+        demoData.sessions.push({ id: newSessionId, classId: clazz.id, timestamp: nowISO });
+        demoData.attendance[newSessionId] = [];
+        saveData();
+        renderAttendanceForm(demoData.sessions.find(s => s.id === newSessionId));
+      } else {
+        const session = demoData.sessions.find(s => s.id === Number(select.value));
+        if (!session) {
+          attendanceMarkArea.innerHTML = '<p>Session not found.</p>';
+          return;
+        }
+        renderAttendanceForm(session);
+      }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      renderTeacherDashboard();
+    });
+  }
+
+  // Teacher: View reports per class/student
+  function renderTeacherReports(classId) {
+    const clazz = demoData.classes.find(c => c.id === classId);
+    if (!clazz) {
+      main.innerHTML = '<p>Class not found</p>';
+      return;
+    }
+    const sessions = demoData.sessions.filter(s => s.classId === clazz.id).sort((a,b)=>new Date(a.timestamp) - new Date(b.timestamp));
+    const students = demoData.users.filter(u => u.role === 'student');
+
+    // Build a matrix: each row student, each column session, cell is attendance
+    let html = `<div class="content-container">
+      <h2>Attendance Report - ${clazz.name}</h2>
+      <table aria-label="Attendance report table">
+        <thead>
+          <tr><th>Student</th>${sessions.map(s => `<th title="${formatDate(s.timestamp)}">${formatDate(s.timestamp).slice(0,10)}</th>`).join('')}
+          <th>Attendance %</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+    students.forEach(student => {
+      let presentCount = 0;
+      let attendedSessions = 0;
+      html += `<tr><td>${student.name}</td>`;
+      sessions.forEach(session => {
+        const att = demoData.attendance[session.id] || [];
+        const studentRecord = att.find(a => a.studentId === student.id);
+        const present = studentRecord ? studentRecord.present : false;
+        if (studentRecord) attendedSessions++;
+        if (present) presentCount++;
+        html += `<td aria-label="${student.name} was ${present ? 'present' : 'absent'} on ${formatDate(session.timestamp)}">
+                   <span class="attendance-mark ${present ? 'present' : 'absent'}">${present ? 'P' : 'A'}</span>
+                 </td>`;
+      });
+      const percentage = attendedSessions > 0 ? Math.round((presentCount / sessions.length) * 100) : 0;
+      html += `<td>${percentage}%</td></tr>`;
+    });
+    html += `</tbody></table>
+      <button id="btnBackReports" class="btn-secondary" style="margin-top: 16px;">Back</button>
+    </div>`;
+    main.innerHTML = html;
+    $('#btnBackReports').addEventListener('click', () => {
+      renderTeacherDashboard();
+    });
+  }
+
+  // ROLE: Student - attendance history and dashboard
+  function renderStudentDashboard() {
+    const student = demoData.users.find(u => u.id === currentUserId);
+    // Find classes where this student has attendance records
+    // We'll check attendance for student by sessions per class
+    const classes = demoData.classes;
+
+    let html = `<div class="content-container">
+      <h2>Student Dashboard</h2>
+      <p>Welcome, <strong>${student.name}</strong>.</p>
+      <div>`;
+    classes.forEach(clazz => {
+      const classSessions = demoData.sessions.filter(s => s.classId === clazz.id);
+      let totalSessions = classSessions.length;
+      let presentCount = 0;
+      classSessions.forEach(session => {
+        const attList = demoData.attendance[session.id] || [];
+        const attRecord = attList.find(a => a.studentId === student.id);
+        if (attRecord && attRecord.present) presentCount++;
+      });
+      const percentage = totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : 0;
+      html += `
+        <div class="card">
+          <div class="card-header">${clazz.name}</div>
+          <p>Attendance Percentage: ${percentage}%</p>
+          <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percentage}" aria-label="Attendance percentage progress bar">
+            <div class="progress-bar-fill" style="width:${percentage}%;"></div>
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>
+    </div>`;
+    main.innerHTML = html;
+  }
+
+  function renderStudentAttendanceHistory() {
+    const student = demoData.users.find(u => u.id === currentUserId);
+    const sessions = demoData.sessions.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    let html = `
+      <div class="content-container">
+      <h2>Attendance History for ${student.name}</h2>
+      <table aria-label="Attendance history table">
+        <thead>
+          <tr><th>Class</th><th>Date & Time</th><th>Attendance</th></tr>
+        </thead>
+        <tbody>`;
+    sessions.forEach(session => {
+      const clazz = demoData.classes.find(c => c.id === session.classId);
+      const attList = demoData.attendance[session.id] || [];
+      const attRecord = attList.find(a => a.studentId === student.id);
+      const present = attRecord ? attRecord.present : false;
+      html += `<tr>
+        <td>${clazz ? clazz.name : 'Unknown'}</td>
+        <td>${formatDate(session.timestamp)}</td>
+        <td><span class="attendance-mark ${present ? 'present' : 'absent'}">${present ? 'Present' : 'Absent'}</span></td>
+      </tr>`;
+    });
+    html += `</tbody></table>
+      <button id="btnBackAttendanceHistory" class="btn-secondary" style="margin-top: 16px;">Back</button>
+    </div>`;
+    main.innerHTML = html;
+    $('#btnBackAttendanceHistory').addEventListener('click', () => {
+      renderStudentDashboard();
+    });
+  }
+
+  // Chat Section for all users. Students can message admin/teacher, teachers & admin reply with AI simulated answers
+  function renderChat() {
+    const user = demoData.users.find(u => u.role === currentUserRole && u.id === currentUserId);
+    if (!user) {
+      main.innerHTML = '<p>User not found</p>';
+      return;
+    }
+
+    let html = `
+    <div class="content-container" style="max-width: 600px;">
+      <h2>Chat Support</h2>
+      <div id="chatBox" class="chat-box" aria-live="polite" aria-relevant="additions" role="log"></div>
+      <form id="chatForm" aria-label="Chat input form" autocomplete="off">
+        <div class="chat-input-container">
+          <input id="chatInput" type="text" placeholder="Type a message..." aria-label="Chat message input" required />
+          <button type="submit" class="chat-send-btn" aria-label="Send message">
+            <span class="material-icons" aria-hidden="true">send</span>
+          </button>
+        </div>
+      </form>
+    </div>`;
+
+    main.innerHTML = html;
+
+    const chatBox = $('#chatBox');
+    const chatForm = $('#chatForm');
+    const chatInput = $('#chatInput');
+
+    // Load previous messages from demoData.messages filtered for this user conversation
+    // For demo simplicity, show all messages
+    let messages = demoData.messages || [];
+
+    function renderMessages() {
+      chatBox.innerHTML = '';
+      messages.forEach(m => {
+        const fromUser = demoData.users.find(u => u.id === m.fromId);
+        const isCurrentUser = m.fromId === currentUserId;
+        const senderRole = isCurrentUser ? currentUserRole : (fromUser ? fromUser.role : 'unknown');
+        const msgElem = document.createElement('div');
+        msgElem.className = 'chat-message ' + (isCurrentUser ? 'student' : 'teacher');
+        msgElem.textContent = m.text;
+        chatBox.appendChild(msgElem);
+      });
+      chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+    }
+
+    function aiReply() {
+      setTimeout(() => {
+        const responseText = demoData.aiResponses[Math.floor(Math.random()*demoData.aiResponses.length)];
+        messages.push({
+          id: genId(),
+          fromId: demoData.users.find(u => u.role === 'teacher' || u.role === 'admin').id,
+          toId: currentUserId,
+          text: responseText,
+          timestamp: new Date().toISOString()
+        });
+        renderMessages();
+        announce('Received AI response');
+      }, 1500);
+    }
+
+    chatForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = chatInput.value.trim();
+      if (!text) return;
+      messages.push({
+        id: genId(),
+        fromId: currentUserId,
+        toId: demoData.users.find(u => u.role === 'teacher' || u.role === 'admin').id,
+        text,
+        timestamp: new Date().toISOString(),
+      });
+      chatInput.value = '';
+      renderMessages();
+      announce('Message sent');
+      aiReply();
+    });
+
+    renderMessages();
+  }
+
+  // Render views simplification
+  function renderView(key) {
+    if (currentUserRole === 'admin') {
+      switch (key) {
+        case 'dashboard': return renderAdminDashboard();
+        case 'users': return renderAdminUsers();
+        case 'classes': return renderAdminClasses();
+        case 'sessions': return renderAdminSessions();
+        case 'chat': return renderChat();
+        default: main.innerHTML = '<p>Admin View Not Found</p>';
+      }
+    } else if (currentUserRole === 'teacher') {
+      switch (key) {
+        case 'dashboard': return renderTeacherDashboard();
+        case 'attendance': return renderTeacherDashboard();
+        case 'reports': return renderTeacherReports(demoData.classes.find(c=>c.teacherId===currentUserId)?.id || demoData.classes[0]?.id);
+        case 'chat': return renderChat();
+        default: main.innerHTML = '<p>Teacher View Not Found</p>';
+      }
+    } else if (currentUserRole === 'student') {
+      switch (key) {
+        case 'dashboard': return renderStudentDashboard();
+        case 'attendanceHistory': return renderStudentAttendanceHistory();
+        case 'chat': return renderChat();
+        default: main.innerHTML = '<p>Student View Not Found</p>';
+      }
+    } else {
+      main.innerHTML = '<p>No valid role set.</p>';
+    }
+  }
+
+  // Role and user switching for demo (also setting currentUserId accordingly)
+  roleSelect.addEventListener('change', e => {
+    const role = e.target.value;
+    currentUserRole = role;
+    // Set default userId for selected role from demoData
+    const user = demoData.users.find(u => u.role === role);
+    currentUserId = user ? user.id : null;
+    renderNav();
+    renderView(navItemsByRole[currentUserRole][0]?.key);
+    announce(`Switched to role ${role}`);
+  });
+
+  // Initialize
+  function init() {
+    loadData();
+    renderNav();
+    // Select default role option to match currentUserRole
+    roleSelect.value = currentUserRole;
+    renderView(navItemsByRole[currentUserRole][0]?.key);
+  }
+
+  init();
+</script>
+
+</body>
+</html>
+
